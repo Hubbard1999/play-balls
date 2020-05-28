@@ -83,8 +83,7 @@ cc.Class({
         //得到所有文件夹的名字
         let dirs = Object.keys(dict);
 
-        dirs.sort();
-
+       
         /**
          * name : xx 
          * url  : xx
@@ -96,7 +95,7 @@ cc.Class({
             let name = Object.keys(dict[dirs[i]])[0];
             let url = dict[dirs[i]][name];
 
-            console.log(name);
+            //console.log(name);
             //如果不是game就跳过
             if(!name.startsWith('game')){
                 continue;
@@ -107,14 +106,31 @@ cc.Class({
             
         }
 
+        this.SceneList.sort(this.sortByField);
+        //console.log(this.SceneList);
       
     },
+
+    sortByField(x, y) {
+        return x.name.slice(-2) < y.name.slice(-2);
+    },
+
 
     //生成按钮
     initItem(){
         //左上角第一个button的位置
-        let x = -300;
-        let y = 280;
+        var size = this.node.getContentSize();
+
+        //两个按钮间的距离
+        let item_nap = 150;
+
+        let init_x = -5-item_nap;
+        let init_y = size.height/2 - 200;
+
+       
+
+        let x = init_x;
+        let y = init_y;
 
         let InitItemCount = Math.min(this.InitItemCount,this.SceneList.length);
 
@@ -128,15 +144,17 @@ cc.Class({
             let item = cc.instantiate(this.ItemPrefab).getComponent('Select_Point_Item');
             this.node.addChild(item.node);
 
-            //一行只存放三个按钮
-            if((i + 1) % 4 == 0){
-                y -= 150;
-                x = -300;
-            }
-            x += 150;
-
             //名字为game_01 最后的两个 即01
-            item.UpdateItem (x, y, ItemInfo.name.slice(-2), ItemInfo.url);
+            item.UpdateItem (x, y, ItemInfo.name, ItemInfo.url);
+
+            //一行只存放三个按钮
+            if((i + 1) % 3 == 0){
+                y -= 150;
+                x = init_x;
+            }else{
+                x += item_nap;
+            }
+          
 
             //将game的按钮push进item列表
             this.ItemList.push(item);

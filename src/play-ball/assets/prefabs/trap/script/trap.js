@@ -1,15 +1,18 @@
-// Learn cc.Class:
-//  - https://docs.cocos.com/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 var com = require('common');
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        circle_transition: {
+
+        //幕布开合时间
+        duration : 0.5,
+
+        top_Curtain_red: {
+            default: null,
+            type: cc.Node
+        },
+
+        bottom_Curtain_red: {
             default: null,
             type: cc.Node
         },
@@ -22,8 +25,9 @@ cc.Class({
             default: 'game_01',
         },
 
-        otherBallScript: {
-            default: 'normal_ball'
+        collideAudio: {
+            default: null,
+            type: cc.AudioClip
         }
     },
 
@@ -39,24 +43,34 @@ cc.Class({
 
     },
 
-    onCollisionEnter: function(other, self) {
-        other.getComponent(cc.RigidBody).linearVelocity = cc.Vec2.ZERO;
-        this.open_the_door();
-        console.log('fail');
-        com.result=-1;
-        this.scheduleOnce(function() {
-            cc.director.loadScene(this.nextSceneName);
-        }, 1.3);
+    onBeginContact: function(contact, selfCollider, otherCollider) {
+        //陷阱被碰撞时 播放音效
+        if(com.data == 1) {
+            cc.audioEngine.playEffect(this.collideAudio);
+        }
+        //小球碰到陷阱后， 判定为失败，并且撤销陷阱的碰撞监听
+        if(otherCollider.node._name == this.ball._name) {
+            this.top_Curtain_red.active=true;
+            this.bottom_Curtain_red.active=true;
+            this.close_the_door();
+            console.log('fail');
+            com.result=-1;
+            this.scheduleOnce(function() {
+                cc.director.loadScene(this.nextSceneName);
+            }, this.duration);
+            this.node.getComponent(cc.RigidBody).enabledContactListener = false;
+        }
     },
 
-    open_the_door:function(){
-        this.circle_transition.x=this.ball.x;
-        this.circle_transition.y=this.ball.y;
-        this.circle_transition.active=true;
-        cc.tween(this.circle_transition)
-        .to(.5, { scale: 2.5 })
+    close_the_door:function(){
+
+        cc.tween(this.top_Curtain_red)
+        .to(this.duration, { position: cc.v2(0, 250) })
         .start()
-             
+        cc.tween(this.bottom_Curtain_red)
+        .to(this.duration, { position: cc.v2(0, -250) })
+        .start()
+        this.scheduleOnce(function() {
+        },this.duration);
     },
-    // update (dt) {},
 });
